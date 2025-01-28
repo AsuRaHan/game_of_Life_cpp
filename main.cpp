@@ -1,6 +1,5 @@
 // main.cpp
 #include "framework.h"
-#include "GameOfLife.h"
 #include "Window.h"
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,

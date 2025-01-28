@@ -1,7 +1,7 @@
 // Grid.cpp
 #include "Grid.h"
-#include "GameOfLife.h"
-#include "Renderer.h"
+//#include "GameOfLife.h"
+//#include "Renderer.h"
 
 void HandleMouseClick(HWND hWnd, int xPos, int yPos)
 {

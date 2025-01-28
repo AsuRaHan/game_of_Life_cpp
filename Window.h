@@ -1,6 +1,9 @@
 // Window.h
 #pragma once
 
+#ifndef WINDOW_H
+#define WINDOW_H
+
 #include "framework.h"
 #include "Grid.h"
 // Функция для регистрации класса окна
@@ -14,6 +17,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 // Обработчик диалога "О программе"
 INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK ChangeSizeDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
-//// Функция для обработки кликов мыши
-//void HandleMouseClick(HWND hWnd, int xPos, int yPos);
+#endif //WINDOW_H

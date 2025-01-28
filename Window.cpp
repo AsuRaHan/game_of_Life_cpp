@@ -8,6 +8,7 @@
 HINSTANCE hInst;                                // текущий экземпляр
 WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
+HWND hWnd;
 
 int windowWidth = 1000;  // Ширина окна
 int windowHeight = 1000; // Высота окна
@@ -42,14 +43,13 @@ BOOL InitializeWindow(HINSTANCE hInstance, int nCmdShow)
     LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadStringW(hInstance, IDC_LIFE2, szWindowClass, MAX_LOADSTRING);
 
-
     if (!MyRegisterClass(hInstance)) {
         MessageBox(nullptr, L"Не удалось зарегистрировать класс окна!", L"Ошибка", MB_ICONERROR | MB_OK);
         return FALSE;
     }
 
     // Создание окна
-    HWND hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
+    hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, 0, windowWidth, windowHeight, nullptr, nullptr, hInstance, nullptr);
     if (!hWnd)
     {
@@ -84,6 +84,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         case IDM_ABOUT:
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
+        case IDC_CHANGE_SIZE:
+            KillTimer(hWnd, 1); // Останавливаем таймер
+            DialogBox(hInst, MAKEINTRESOURCE(IDD_CHANGE_SIZE_DIALOG), hWnd, ChangeSizeDialogProc);
+            break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
             break;
@@ -115,13 +119,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
-        float aspect = (float)windowWidth / windowHeight;
-        if (aspect > 1.0f) {
-            //glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
-        }
-        else {
-            //glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
-        }
+        //float aspect = (float)windowWidth / windowHeight;
+        //if (aspect > 1.0f) {
+        //    glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
+        //}
+        //else {
+        //    glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
+        //}
 
         glMatrixMode(GL_MODELVIEW);
         InvalidateRect(hWnd, nullptr, FALSE); // Перерисовываем окно
@@ -177,41 +181,32 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
     return (INT_PTR)FALSE;
 }
 
-//void HandleMouseClick(HWND hWnd, int xPos, int yPos)
-//{
-//    // Получаем размеры клиентской области окна
-//    RECT clientRect;
-//    GetClientRect(hWnd, &clientRect);
-//    int clientWidth = clientRect.right - clientRect.left;
-//    int clientHeight = clientRect.bottom - clientRect.top;
-//
-//    // Вычисляем аспектное соотношение
-//    float aspect = (float)clientWidth / clientHeight;
-//
-//    // Вычисляем размер ячейки в пикселях, учитывая аспектное соотношение
-//    float cellWidth, cellHeight;
-//    if (aspect > 1.0f) {
-//        // Если окно шире, чем высота
-//        cellWidth = (float)clientWidth / GRID_SIZE;
-//        cellHeight = cellWidth / aspect; // Корректируем высоту ячейки
-//    }
-//    else {
-//        // Если окно выше, чем ширина
-//        cellHeight = (float)clientHeight / GRID_SIZE;
-//        cellWidth = cellHeight * aspect; // Корректируем ширину ячейки
-//    }
-//
-//    // Переводим координаты мыши в координаты сетки без инверсии Y
-//    int gridX = (int)(xPos / cellWidth);
-//    int gridY = (int)(yPos / cellHeight);
-//
-//    // Проверяем, что координаты находятся в пределах сетки
-//    if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE)
-//    {
-//        // Изменяем состояние клетки
-//        grid[gridX][gridY] = !grid[gridX][gridY];
-//
-//        // Перерисовываем окно, чтобы отобразить изменения
-//        InvalidateRect(hWnd, nullptr, TRUE);
-//    }
-//}
+INT_PTR CALLBACK ChangeSizeDialogProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    switch (message)
+    {
+    case WM_INITDIALOG:
+        return (INT_PTR)TRUE;
+
+    case WM_COMMAND:
+        if (LOWORD(wParam) == IDC_CHANGE_SIZE_BUTTON)
+        {
+            WCHAR buffer[10];
+            GetDlgItemText(hDlg, IDC_SIZE_EDIT, buffer, 10);
+            int newSize = _wtoi(buffer);
+            if (newSize > 0)
+            {
+                ChangeGridSize(newSize, hWnd);
+                EndDialog(hDlg, LOWORD(wParam));
+                return (INT_PTR)TRUE;
+            }
+        }
+        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
+        {
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+        }
+        break;
+    }
+    return (INT_PTR)FALSE;
+}
