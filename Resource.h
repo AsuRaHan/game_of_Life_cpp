@@ -24,7 +24,8 @@
 #define IDD_CHANGE_SIZE_DIALOG  112
 #define IDC_SIZE_EDIT           113
 #define IDC_CHANGE_SIZE_BUTTON  114
-#define IDC_CHANGE_SIZE      115 // или любое другое свободное значение
+#define IDC_CHANGE_SIZE      115 
+#define IDC_SPEED_EDIT           116
 #endif
 // Следующие стандартные значения для новых объектов
 //

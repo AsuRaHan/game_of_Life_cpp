@@ -10,6 +10,8 @@ WCHAR szTitle[MAX_LOADSTRING];                  // Текст строки заголовка
 WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 HWND hWnd;
 
+int currentSpeed = 100; // Начальная скорость в миллисекундах
+
 int windowWidth = 1000;  // Ширина окна
 int windowHeight = 1000; // Высота окна
 
@@ -92,7 +94,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DestroyWindow(hWnd);
             break;
         case IDC_START:
-            SetTimer(hWnd, 1, 100, nullptr); // Включаем таймер
+            SetTimer(hWnd, 1, currentSpeed, nullptr); // Включаем таймер
             break;
         case IDC_STOP:
             KillTimer(hWnd, 1); // Останавливаем таймер
@@ -186,23 +188,43 @@ INT_PTR CALLBACK ChangeSizeDialogProc(HWND hDlg, UINT message, WPARAM wParam, LP
     switch (message)
     {
     case WM_INITDIALOG:
-        return (INT_PTR)TRUE;
+    {
+        // Инициализация полей диалога с текущими значениями
+        SendDlgItemMessage(hDlg, IDC_SIZE_EDIT, EM_SETLIMITTEXT, (WPARAM)5, 0); // Ограничение ввода для размера
+        SendDlgItemMessage(hDlg, IDC_SPEED_EDIT, EM_SETLIMITTEXT, (WPARAM)5, 0); // Ограничение ввода для скорости
 
+        WCHAR sizeBuffer[10];
+        WCHAR speedBuffer[10];
+
+        // Установка текущего размера сетки
+        swprintf_s(sizeBuffer, 10, L"%d", GRID_SIZE);
+        SetDlgItemText(hDlg, IDC_SIZE_EDIT, sizeBuffer);
+
+        // Установка текущей скорости (предполагаем, что текущая скорость хранится в глобальной переменной `currentSpeed`)
+        swprintf_s(speedBuffer, 10, L"%d", currentSpeed);
+        SetDlgItemText(hDlg, IDC_SPEED_EDIT, speedBuffer);
+
+        return (INT_PTR)TRUE;
+    }
     case WM_COMMAND:
-        if (LOWORD(wParam) == IDC_CHANGE_SIZE_BUTTON)
+        switch (LOWORD(wParam))
         {
-            WCHAR buffer[10];
-            GetDlgItemText(hDlg, IDC_SIZE_EDIT, buffer, 10);
-            int newSize = _wtoi(buffer);
-            if (newSize > 0)
-            {
-                ChangeGridSize(newSize, hWnd);
-                EndDialog(hDlg, LOWORD(wParam));
-                return (INT_PTR)TRUE;
-            }
+        case IDC_CHANGE_SIZE_BUTTON:
+        {
+            WCHAR newSizeBuffer[10];
+            WCHAR newSpeedBuffer[10];
+            GetDlgItemText(hDlg, IDC_SIZE_EDIT, newSizeBuffer, 10);
+            GetDlgItemText(hDlg, IDC_SPEED_EDIT, newSpeedBuffer, 10);
+            int newSize = _wtoi(newSizeBuffer);
+            currentSpeed = _wtoi(newSpeedBuffer);
+            ChangeGridSize(newSize, hWnd);
+            EndDialog(hDlg, LOWORD(wParam));
+            return (INT_PTR)TRUE;
+
         }
-        if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
-        {
+        break;
+        case IDOK:
+        case IDCANCEL:
             EndDialog(hDlg, LOWORD(wParam));
             return (INT_PTR)TRUE;
         }
