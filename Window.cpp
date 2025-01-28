@@ -105,6 +105,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             break;
         case IDC_CLEAR:
             ClearGrid(); // Добавленная функция для очистки сетки
+            InvalidateRect(hWnd, nullptr, TRUE); // Перерисовываем окно
             break;
         default:
             return DefWindowProc(hWnd, message, wParam, lParam);

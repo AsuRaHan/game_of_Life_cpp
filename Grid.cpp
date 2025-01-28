@@ -1,7 +1,5 @@
 // Grid.cpp
 #include "Grid.h"
-//#include "GameOfLife.h"
-//#include "Renderer.h"
 
 void HandleMouseClick(HWND hWnd, int xPos, int yPos)
 {
@@ -24,13 +22,13 @@ void HandleMouseClick(HWND hWnd, int xPos, int yPos)
     int gridX = (int)(xPos / cellWidth);
     int gridY = (int)(yPos / cellHeight);
 
-    // Проверяем, что координаты находятся в пределах сетки
+    // Проверка границ
+    gridX = min(max(gridX, 0), GRID_SIZE - 1);
+    gridY = min(max(gridY, 0), GRID_SIZE - 1);
+
     if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE)
     {
-        // Изменяем состояние клетки
         grid[gridX][gridY] = !grid[gridX][gridY];
-
-        // Перерисовываем окно, чтобы отобразить изменения
         InvalidateRect(hWnd, nullptr, TRUE);
     }
 }
