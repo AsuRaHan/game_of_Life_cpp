@@ -112,6 +112,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         }
     }
     break;
+    //case WM_MOUSEMOVE:
+    //{
+        //int xPos = GET_X_LPARAM(lParam);
+        //int yPos = GET_Y_LPARAM(lParam);
+        // Функция для определения координат клетки под курсором
+        //UpdateMouseHighlight(hWnd, xPos, yPos);
+        //InvalidateRect(hWnd, nullptr, FALSE);
+    //}
+    break;
     case WM_SIZE:
     {
         windowWidth = LOWORD(lParam);

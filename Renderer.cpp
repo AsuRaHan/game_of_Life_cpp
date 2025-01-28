@@ -87,5 +87,33 @@ void DrawGrid()
     }
     glEnd();
 
+    // Подсветка текущей клетки под курсором мыши
+//// Предполагаем, что у нас есть глобальные переменные для хранения текущей позиции мыши
+//    if (highlightX >= 0 && highlightX < GRID_SIZE && highlightY >= 0 && highlightY < GRID_SIZE) {
+//        HighlightCell(highlightX, highlightY);
+//    }
+
     SwapBuffers(hdc);
+}
+
+void HighlightCell(int x, int y)
+{
+    float aspect = (float)windowWidth / windowHeight;
+    float cellSizeX = 2.0f / GRID_SIZE;
+    float cellSizeY = 2.0f / GRID_SIZE;
+
+    if (aspect > 1.0f) {
+        cellSizeX *= aspect;
+    }
+    else {
+        cellSizeY /= aspect;
+    }
+
+    glColor3f(1.0f, 0.0f, 0.0f); // Красный цвет для подсветки
+    glBegin(GL_LINE_LOOP);
+    glVertex2f(-1.0f + x * cellSizeX, 1.0f - y * cellSizeY);
+    glVertex2f(-1.0f + (x + 1) * cellSizeX, 1.0f - y * cellSizeY);
+    glVertex2f(-1.0f + (x + 1) * cellSizeX, 1.0f - (y + 1) * cellSizeY);
+    glVertex2f(-1.0f + x * cellSizeX, 1.0f - (y + 1) * cellSizeY);
+    glEnd();
 }
