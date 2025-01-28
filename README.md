@@ -33,3 +33,7 @@
 1. Клонируйте репозиторий:
    ```bash
    git clone git@github.com:AsuRaHan/game_of_Life_cpp.git
+
+git tag -a v1.0.0 -m "Версия 1.0.0"
+
+git push origin v1.0.0
