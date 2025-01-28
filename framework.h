@@ -18,3 +18,5 @@
 #include <tchar.h>
 
 #include "resource.h"
+
+#define MAX_LOADSTRING 100

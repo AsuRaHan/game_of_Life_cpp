@@ -5,29 +5,22 @@
 
 void HandleMouseClick(HWND hWnd, int xPos, int yPos)
 {
-    // Получаем размеры клиентской области окна
     RECT clientRect;
     GetClientRect(hWnd, &clientRect);
     int clientWidth = clientRect.right - clientRect.left;
     int clientHeight = clientRect.bottom - clientRect.top;
 
-    // Вычисляем аспектное соотношение
     float aspect = (float)clientWidth / clientHeight;
-
-    // Вычисляем размер ячейки в пикселях, учитывая аспектное соотношение
     float cellWidth, cellHeight;
     if (aspect > 1.0f) {
-        // Если окно шире, чем высота
         cellWidth = (float)clientWidth / GRID_SIZE;
-        cellHeight = cellWidth / aspect; // Корректируем высоту ячейки
+        cellHeight = cellWidth / aspect;
     }
     else {
-        // Если окно выше, чем ширина
         cellHeight = (float)clientHeight / GRID_SIZE;
-        cellWidth = cellHeight * aspect; // Корректируем ширину ячейки
+        cellWidth = cellHeight * aspect;
     }
 
-    // Переводим координаты мыши в координаты сетки без инверсии Y
     int gridX = (int)(xPos / cellWidth);
     int gridY = (int)(yPos / cellHeight);
 

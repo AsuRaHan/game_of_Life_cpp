@@ -7,9 +7,9 @@
 #include <vector>
 #include <random>
 #include "framework.h"
-#include "Window.h"
+//#include "Window.h"
 // Константы
-#define MAX_LOADSTRING 100
+
 
 // Глобальные переменные
 extern int GRID_SIZE; // Объявление

@@ -6,6 +6,7 @@
 
 #include "framework.h"
 #include <gl/GL.h>
+#include "Window.h"
 
 // Функции для работы с OpenGL
 void InitOpenGL(HWND hWnd);

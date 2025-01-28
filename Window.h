@@ -6,6 +6,12 @@
 
 #include "framework.h"
 #include "Grid.h"
+
+extern int currentSpeed; // Начальная скорость в миллисекундах
+
+extern int windowWidth;  // Ширина окна
+extern int windowHeight; // Высота окна
+
 // Функция для регистрации класса окна
 ATOM MyRegisterClass(HINSTANCE hInstance);
 
