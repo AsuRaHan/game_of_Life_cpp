@@ -113,8 +113,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     break;
     case WM_SIZE:
     {
-        windowWidth = LOWORD(lParam);  // Обновляем ширину окна
-        windowHeight = HIWORD(lParam); // Обновляем высоту окна
+        windowWidth = LOWORD(lParam);
+        windowHeight = HIWORD(lParam);
 
         glViewport(0, 0, windowWidth, windowHeight);
 
