@@ -31,7 +31,8 @@ void HandleMouseClick(HWND hWnd, int xPos, int yPos)
 
     if (gridX >= 0 && gridX < GRID_SIZE && gridY >= 0 && gridY < GRID_SIZE)
     {
-        grid[gridX][gridY] = !grid[gridX][gridY];
+        // Установка клетки в "живую" (1) или "мертвую" (0)
+        grid[gridX][gridY] = (grid[gridX][gridY] == 0) ? 1 : 0; // Инвертируем состояние
         InvalidateRect(hWnd, nullptr, TRUE);
     }
 }

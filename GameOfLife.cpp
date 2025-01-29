@@ -5,7 +5,7 @@
 
 // »нициализаци€ глобальных переменных, объ€вленных в GameOfLife.h
 
-std::vector<std::vector<bool>> grid(GRID_SIZE, std::vector<bool>(GRID_SIZE, false));
+std::vector<std::vector<int>> grid(GRID_SIZE, std::vector<int>(GRID_SIZE, false));
 
 int GRID_SIZE = 100; // ќпределение
 
@@ -22,19 +22,18 @@ void InitializeGrid() {
     }
 }
 
+
 // ѕодсчет количества живых соседей дл€ клетки
 int CountLiveNeighbors(int x, int y) {
     int count = 0;
-    for (int i = -1; i <= 1; ++i) {
-        for (int j = -1; j <= 1; ++j) {
-            if (i == 0 && j == 0) continue; // ѕропускаем саму клетку
-
+    for (int dx = -1; dx <= 1; ++dx) {
+        for (int dy = -1; dy <= 1; ++dy) {
+            if (dx == 0 && dy == 0) continue; // пропустить саму клетку
             // ¬ычисл€ем координаты соседа с учетом тороидальной топологии
-            int nx = (x + i + GRID_SIZE) % GRID_SIZE;
-            int ny = (y + j + GRID_SIZE) % GRID_SIZE;
-
+            int nx = (x + dx + GRID_SIZE) % GRID_SIZE;
+            int ny = (y + dy + GRID_SIZE) % GRID_SIZE;
             // ”читываем состо€ние соседа
-            count += grid[nx][ny] ? 1 : 0;
+            count += grid[nx][ny];
         }
     }
     return count;
@@ -42,21 +41,20 @@ int CountLiveNeighbors(int x, int y) {
 
 // ќбновление состо€ни€ сетки в соответствии с правилами игры "∆изнь"
 void UpdateGrid() {
-    std::vector<std::vector<bool>> newGrid = grid;
-    for (int i = 0; i < GRID_SIZE; ++i) {
-        for (int j = 0; j < GRID_SIZE; ++j) {
-            int liveNeighbors = CountLiveNeighbors(i, j);
-            if (grid[i][j]) {
-                newGrid[i][j] = (liveNeighbors == 2 || liveNeighbors == 3);
+    std::vector<std::vector<int>> newGrid = grid;
+    for (int x = 0; x < GRID_SIZE; ++x) {
+        for (int y = 0; y < GRID_SIZE; ++y) {
+            int neighbors = CountLiveNeighbors(x, y);
+            if (grid[x][y] == 1) {
+                newGrid[x][y] = (neighbors == 2 || neighbors == 3) ? 1 : 0;
             }
             else {
-                newGrid[i][j] = (liveNeighbors == 3);
+                newGrid[x][y] = (neighbors == 3) ? 1 : 0;
             }
         }
     }
     grid = newGrid;
 }
-
 // ќчистка сетки
 void ClearGrid() {
     for (int i = 0; i < GRID_SIZE; ++i) {
@@ -66,6 +64,7 @@ void ClearGrid() {
     }
 }
 
+// примен€ем новый размер сетки
 void ChangeGridSize(int newSize, HWND hWnd)
 {
     // ѕровер€ем, что новый размер положительный
@@ -73,10 +72,8 @@ void ChangeGridSize(int newSize, HWND hWnd)
     {
         // »змен€ем размер переменной GRID_SIZE
         GRID_SIZE = newSize;
-
         // —оздаем новую сетку с новым размером
-        grid = std::vector<std::vector<bool>>(GRID_SIZE, std::vector<bool>(GRID_SIZE, false));
-
+        grid = std::vector<std::vector<int>>(GRID_SIZE, std::vector<int>(GRID_SIZE, false));
         // ѕерерисовываем окно, чтобы отразить изменени€
         InvalidateRect(hWnd, nullptr, TRUE);
     }

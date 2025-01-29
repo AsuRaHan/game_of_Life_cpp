@@ -4,9 +4,8 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include "framework.h"
 #include "GameOfLife.h"
-#include "Renderer.h"
+
 
 extern int highlightX;
 extern int highlightY;

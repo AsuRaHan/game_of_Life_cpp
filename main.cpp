@@ -1,8 +1,5 @@
 // main.cpp
-#include "framework.h"
 #include "Window.h"
-#include <windows.h>
-#include <shobjidl.h>
 
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,

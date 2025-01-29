@@ -6,12 +6,14 @@
 
 #include "framework.h"
 #include <gl/GL.h>
+#include <GL/glu.h>
 #include "Window.h"
 
 // Функции для работы с OpenGL
+void LoadOpenGLFunctions();
 void InitOpenGL(HWND hWnd);
 void CleanupOpenGL(HWND hWnd);
 void DrawGrid();
-void HighlightCell(int x, int y);
+
 
 #endif //RENDERER_H

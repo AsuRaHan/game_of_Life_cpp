@@ -7,13 +7,11 @@
 #include <vector>
 #include <random>
 #include "framework.h"
-//#include "Window.h"
-// Константы
-
 
 // Глобальные переменные
 extern int GRID_SIZE; // Объявление
-extern std::vector<std::vector<bool>> grid;
+extern std::vector<std::vector<int>> grid;
+
 
 // Функции для работы с игрой "Жизнь"
 void InitializeGrid();
