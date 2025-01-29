@@ -13,7 +13,7 @@
 void LoadOpenGLFunctions();
 void InitOpenGL(HWND hWnd);
 void CleanupOpenGL(HWND hWnd);
+void RebuildVBO(int newGridSize);
 void DrawGrid();
-
 
 #endif //RENDERER_H

@@ -196,6 +196,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         PAINTSTRUCT ps;
         BeginPaint(hWnd, &ps);
         DrawGrid(); // Отрисовка сетки и клеток
+        //glFinish();
         SwapBuffers(GetDC(hWnd));
         EndPaint(hWnd, &ps);
     }

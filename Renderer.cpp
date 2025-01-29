@@ -22,7 +22,17 @@ HGLRC hglrc;
 #define GL_STREAM_DRAW 0x88E0
 #endif
 
-GLuint vbo; // Идентификатор VBO
+#ifndef GL_ARRAY_BUFFER_BINDING
+#define GL_ARRAY_BUFFER_BINDING 0x8894
+#endif
+
+#ifndef GL_ARRAY_BUFFER
+#define GL_ARRAY_BUFFER 0x8892
+#endif
+
+//GLuint vbo; // Идентификатор VBO
+GLuint vboCells; // Для клеток
+GLuint vboGrid;  // Для сетки
 
 // Определение если он не определен
 typedef ptrdiff_t GLsizeiptr;
@@ -57,6 +67,31 @@ void LoadOpenGLFunctions() {
         exit(1); // или другой способ обработки ошибки
     }
 }
+
+
+void CheckOpenGLError(const char* stmt, const char* fname, int line)
+{
+    GLenum err = glGetError();
+    if (err != GL_NO_ERROR)
+    {
+        WCHAR errorMsg[256];
+        swprintf_s(errorMsg, L"OpenGL error %08X, at %S:%d - for %S", err, fname, line, stmt);
+
+        MessageBoxW(NULL, errorMsg, L"OpenGL Error", MB_OK | MB_ICONERROR);
+        // Можно добавить дополнительную обработку ошибок или выход из программы
+    }
+}
+
+#ifdef _DEBUG
+#define GL_CHECK(stmt) do { \
+    stmt; \
+    CheckOpenGLError(#stmt, __FILE__, __LINE__); \
+} while (0)
+#else
+#define GL_CHECK(stmt) stmt
+#endif
+
+
 // Инициализация OpenGL
 void InitOpenGL(HWND hWnd)
 {
@@ -107,18 +142,41 @@ void InitOpenGL(HWND hWnd)
     glLoadIdentity();
     glOrtho(-1.0, 1.0, -1.0, 1.0, -1.0, 1.0);
     glMatrixMode(GL_MODELVIEW);
+
+    // Создаем VBO один раз при инициализации
+    RebuildVBO(GRID_SIZE);
 }
 
 // Очистка ресурсов OpenGL
 void CleanupOpenGL(HWND hWnd)
 {
-    glDeleteBuffers(1, &vbo); // Удаление VBO
+    GL_CHECK(glDeleteBuffers(1, &vboCells));
+    GL_CHECK(glDeleteBuffers(1, &vboGrid));
+
     wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(hglrc);
     ReleaseDC(hWnd, hdc);
 }
 
-// Отрисовка сетки и клеток
+void RebuildVBO(int newGridSize)
+{
+    // Удаляем старые VBO
+    GL_CHECK(glDeleteBuffers(1, &vboCells));
+    GL_CHECK(glDeleteBuffers(1, &vboGrid));
+
+    // Создаем новый VBO для клеток с увеличенным размером
+    GL_CHECK(glGenBuffers(1, &vboCells));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vboCells));
+    // Увеличиваем размер на 10% для запаса
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 4 * newGridSize * newGridSize * 1.1, NULL, GL_DYNAMIC_DRAW));
+
+    // Создаем новый VBO для сетки
+    GL_CHECK(glGenBuffers(1, &vboGrid));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vboGrid));
+    // Для сетки нам нужно достаточно памяти для всех линий
+    GL_CHECK(glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 2 * (newGridSize + 1) * 4, NULL, GL_STATIC_DRAW));
+}
+
 void DrawGrid() {
     glClear(GL_COLOR_BUFFER_BIT);
     glLoadIdentity();
@@ -126,55 +184,64 @@ void DrawGrid() {
     float cellSizeX = 2.0f / GRID_SIZE;
     float cellSizeY = 2.0f / GRID_SIZE;
 
-    // Вектор для хранения вершин живых клеток
-    std::vector<float> vertices;
+    std::vector<float> verticesCells;
+    std::vector<float> verticesGrid;
 
-    // Заполнение вектора vertices данными о живых клетках
+    // Сбор данных для клеток
     for (int i = 0; i < GRID_SIZE; ++i) {
         for (int j = 0; j < GRID_SIZE; ++j) {
             if (grid[i][j]) {
-                // Координаты вершин квадрата для живой клетки
-                vertices.push_back(-1.0f + i * cellSizeX);
-                vertices.push_back(1.0f - j * cellSizeY);
-                vertices.push_back(-1.0f + (i + 1) * cellSizeX);
-                vertices.push_back(1.0f - j * cellSizeY);
-                vertices.push_back(-1.0f + (i + 1) * cellSizeX);
-                vertices.push_back(1.0f - (j + 1) * cellSizeY);
-                vertices.push_back(-1.0f + i * cellSizeX);
-                vertices.push_back(1.0f - (j + 1) * cellSizeY);
+                verticesCells.push_back(-1.0f + i * cellSizeX);
+                verticesCells.push_back(1.0f - j * cellSizeY);
+                verticesCells.push_back(-1.0f + (i + 1) * cellSizeX);
+                verticesCells.push_back(1.0f - j * cellSizeY);
+                verticesCells.push_back(-1.0f + (i + 1) * cellSizeX);
+                verticesCells.push_back(1.0f - (j + 1) * cellSizeY);
+                verticesCells.push_back(-1.0f + i * cellSizeX);
+                verticesCells.push_back(1.0f - (j + 1) * cellSizeY);
             }
         }
     }
 
-     //Создание VBO
-    glGenBuffers(1, &vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);
+    // Обновляем данные в VBO для клеток
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vboCells));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, verticesCells.size() * sizeof(float), verticesCells.data()));
+
 
     // Отрисовка живых клеток
-    glColor3f(0.0f, 0.0f, 0.0f); // Черный цвет для живых клеток
-    glEnableClientState(GL_VERTEX_ARRAY);
-    glBindBuffer(GL_ARRAY_BUFFER, vbo);
-    glVertexPointer(2, GL_FLOAT, 0, 0);
+    GL_CHECK(glColor3f(0.0f, 0.0f, 0.0f));
+    GL_CHECK(glEnableClientState(GL_VERTEX_ARRAY));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vboCells));
+    GL_CHECK(glVertexPointer(2, GL_FLOAT, 0, 0));
+    GL_CHECK(glDrawArrays(GL_QUADS, 0, static_cast<GLsizei>(verticesCells.size() / 2)));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
-    // Явное преобразование size_t в GLsizei
-    glDrawArrays(GL_QUADS, 0, static_cast<GLsizei>(vertices.size() / 2)); // Убедитесь, что делите на 2, так как каждая клетка состоит из 4 вершин
-
-    glDisableClientState(GL_VERTEX_ARRAY);
-
-    // Отрисовка сетки
-    glColor3f(0.5f, 0.5f, 0.5f); // Серый цвет для сетки
-    glBegin(GL_LINES);
+    // Сбор данных для сетки
     for (int i = 0; i <= GRID_SIZE; ++i) {
         // Вертикальные линии
-        glVertex2f(-1.0f + i * cellSizeX, -1.0f);
-        glVertex2f(-1.0f + i * cellSizeX, 1.0f);
-        // Горизонтальные линии
-        glVertex2f(-1.0f, -1.0f + i * cellSizeY);
-        glVertex2f(1.0f, -1.0f + i * cellSizeY);
-    }
-    glEnd();
+        verticesGrid.push_back(-1.0f + i * cellSizeX);
+        verticesGrid.push_back(-1.0f);
+        verticesGrid.push_back(-1.0f + i * cellSizeX);
+        verticesGrid.push_back(1.0f);
 
-    // Очистка VBO (если больше не нужен)
-    glDeleteBuffers(1, &vbo);
+        // Горизонтальные линии
+        verticesGrid.push_back(-1.0f);
+        verticesGrid.push_back(-1.0f + i * cellSizeY);
+        verticesGrid.push_back(1.0f);
+        verticesGrid.push_back(-1.0f + i * cellSizeY);
+    }
+
+    // Обновляем данные в VBO для сетки
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vboGrid));
+    GL_CHECK(glBufferSubData(GL_ARRAY_BUFFER, 0, verticesGrid.size() * sizeof(float), verticesGrid.data()));
+
+    // Отрисовка сетки
+    GL_CHECK(glColor3f(0.5f, 0.5f, 0.5f)); // Серый цвет для сетки
+    GL_CHECK(glEnableClientState(GL_VERTEX_ARRAY));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, vboGrid));
+    GL_CHECK(glVertexPointer(2, GL_FLOAT, 0, 0));
+    GL_CHECK(glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(verticesGrid.size() / 2)));
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+
+    GL_CHECK(glDisableClientState(GL_VERTEX_ARRAY));
 }

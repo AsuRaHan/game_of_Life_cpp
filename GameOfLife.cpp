@@ -74,6 +74,9 @@ void ChangeGridSize(int newSize, HWND hWnd)
         GRID_SIZE = newSize;
         // Создаем новую сетку с новым размером
         grid = std::vector<std::vector<int>>(GRID_SIZE, std::vector<int>(GRID_SIZE, false));
+
+        RebuildVBO(newSize); // Вызываем метод из Renderer
+
         // Перерисовываем окно, чтобы отразить изменения
         InvalidateRect(hWnd, nullptr, TRUE);
     }
