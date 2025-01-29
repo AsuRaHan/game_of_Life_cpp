@@ -50,9 +50,18 @@ BOOL InitializeWindow(HINSTANCE hInstance, int nCmdShow)
         return FALSE;
     }
 
-    // Создание окна
+    // Создаем RECT для размеров окна
+    RECT windowRect = { 0, 0, windowWidth, windowHeight };
+
+    // Корректируем размеры с учетом рамки, заголовка и меню
+    AdjustWindowRectEx(&windowRect, WS_OVERLAPPEDWINDOW | WS_VISIBLE, TRUE, 0);
+
+    // Создание окна с учетом скорректированных размеров
     hWnd = CreateWindowW(szWindowClass, szTitle, WS_OVERLAPPEDWINDOW,
-        CW_USEDEFAULT, 0, windowWidth, windowHeight, nullptr, nullptr, hInstance, nullptr);
+        CW_USEDEFAULT, 0,
+        windowRect.right - windowRect.left,
+        windowRect.bottom - windowRect.top,
+        nullptr, nullptr, hInstance, nullptr);
     if (!hWnd)
     {
         // Если создание окна не удалось, выводим сообщение об ошибке
@@ -131,13 +140,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
-        //float aspect = (float)windowWidth / windowHeight;
-        //if (aspect > 1.0f) {
-        //    glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
-        //}
-        //else {
-        //    glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
-        //}
+        float aspect = (float)windowWidth / windowHeight;
+        if (aspect > 1.0f) {
+            glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
+        }
+        else {
+            glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
+        }
 
         glMatrixMode(GL_MODELVIEW);
         InvalidateRect(hWnd, nullptr, FALSE); // Перерисовываем окно

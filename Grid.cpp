@@ -37,6 +37,7 @@ void HandleMouseClick(HWND hWnd, int xPos, int yPos)
     }
 }
 
+
 void UpdateMouseHighlight(HWND hWnd, int xPos, int yPos)
 {
     RECT clientRect;
