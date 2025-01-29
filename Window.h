@@ -11,7 +11,11 @@ extern int currentSpeed; // Начальная скорость в миллисекундах
 
 extern int windowWidth;  // Ширина окна
 extern int windowHeight; // Высота окна
+extern bool gameRunning; // Глобальная переменная пауза игры
 
+void StartGame();
+void StopGame();
+void UpdateWindowTitle(HWND hWnd);
 // Функция для регистрации класса окна
 ATOM MyRegisterClass(HINSTANCE hInstance);
 

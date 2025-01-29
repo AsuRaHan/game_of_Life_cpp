@@ -11,10 +11,42 @@ WCHAR szWindowClass[MAX_LOADSTRING];            // имя класса главного окна
 HWND hWnd;
 
 int currentSpeed = 100; // Начальная скорость в миллисекундах
-
 int windowWidth = 1000;  // Ширина окна
 int windowHeight = 1000; // Высота окна
+bool gameRunning = false; // Глобальная переменная
 
+void StartGame() {
+    if (!gameRunning) {
+        gameRunning = true;
+        SetTimer(hWnd, 1, currentSpeed, nullptr);
+        UpdateWindowTitle(hWnd); // Обновляем заголовок
+    }
+}
+
+void StopGame() {
+    if (gameRunning) {
+        gameRunning = false;
+        KillTimer(hWnd, 1);
+        UpdateWindowTitle(hWnd); // Обновляем заголовок
+    }
+}
+
+void UpdateWindowTitle(HWND hWnd)
+{
+    WCHAR title[MAX_LOADSTRING];
+    LoadStringW(hInst, IDS_APP_TITLE, title, MAX_LOADSTRING);
+
+    if (gameRunning)
+    {
+        wcscat_s(title, L" - Работает");
+    }
+    else
+    {
+        wcscat_s(title, L" - Пауза");
+    }
+
+    SetWindowTextW(hWnd, title);
+}
 // Функция для регистрации класса окна
 ATOM MyRegisterClass(HINSTANCE hInstance)
 {
@@ -77,7 +109,7 @@ BOOL InitializeWindow(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(hWnd, nCmdShow);
     UpdateWindow(hWnd);
-
+    UpdateWindowTitle(hWnd); // Обновляем заголовок
     return TRUE;
 }
 
@@ -96,17 +128,17 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
             break;
         case IDC_CHANGE_SIZE:
-            KillTimer(hWnd, 1); // Останавливаем таймер
+            StopGame();
             DialogBox(hInst, MAKEINTRESOURCE(IDD_CHANGE_SIZE_DIALOG), hWnd, ChangeSizeDialogProc);
             break;
         case IDM_EXIT:
             DestroyWindow(hWnd);
             break;
         case IDC_START:
-            SetTimer(hWnd, 1, currentSpeed, nullptr); // Включаем таймер
+            StartGame(); // Включаем таймер
             break;
         case IDC_STOP:
-            KillTimer(hWnd, 1); // Останавливаем таймер
+            StopGame();
             break;
         case IDC_RANDOMIZE:
             InitializeGrid(); // Вызываем функцию для случайного заполнения
@@ -140,13 +172,13 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
 
-        float aspect = (float)windowWidth / windowHeight;
-        if (aspect > 1.0f) {
-            glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
-        }
-        else {
-            glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
-        }
+        //float aspect = (float)windowWidth / windowHeight;
+        //if (aspect > 1.0f) {
+        //    glOrtho(-aspect, aspect, -1.0, 1.0, -1.0, 1.0);
+        //}
+        //else {
+        //    glOrtho(-1.0, 1.0, -1.0 / aspect, 1.0 / aspect, -1.0, 1.0);
+        //}
 
         glMatrixMode(GL_MODELVIEW);
         InvalidateRect(hWnd, nullptr, FALSE); // Перерисовываем окно
@@ -173,7 +205,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         InvalidateRect(hWnd, nullptr, FALSE); // Перерисовка окна
         break;
     case WM_DESTROY:
-        KillTimer(hWnd, 1);
+        StopGame();
         CleanupOpenGL(hWnd);
         PostQuitMessage(0);
         break;
@@ -236,11 +268,16 @@ INT_PTR CALLBACK ChangeSizeDialogProc(HWND hDlg, UINT message, WPARAM wParam, LP
             GetDlgItemText(hDlg, IDC_SIZE_EDIT, newSizeBuffer, 10);
             GetDlgItemText(hDlg, IDC_SPEED_EDIT, newSpeedBuffer, 10);
             int newSize = _wtoi(newSizeBuffer);
-            currentSpeed = _wtoi(newSpeedBuffer);
-            ChangeGridSize(newSize, hWnd);
-            EndDialog(hDlg, LOWORD(wParam));
+            int newSpeed = _wtoi(newSpeedBuffer);
+            if (newSize >= 10 && newSize <= 10000 && newSpeed > 0 && newSpeed <= 1000) {
+                ChangeGridSize(newSize, hWnd);
+                currentSpeed = newSpeed;
+                EndDialog(hDlg, LOWORD(wParam));
+            }
+            else {
+                MessageBox(hDlg, L"Please enter valid values for size and speed.", L"Input Error", MB_OK | MB_ICONWARNING);
+            }
             return (INT_PTR)TRUE;
-
         }
         break;
         case IDOK:

@@ -14,33 +14,49 @@ HGLRC hglrc;
 #define GL_STATIC_DRAW 0x88E4
 #endif
 
+#ifndef GL_DYNAMIC_DRAW
+#define GL_DYNAMIC_DRAW 0x88E8
+#endif
+
+#ifndef GL_STREAM_DRAW
+#define GL_STREAM_DRAW 0x88E0
+#endif
+
 GLuint vbo; // Идентификатор VBO
 
-// Определение GLsizeiptr, если он не определен
+// Определение если он не определен
 typedef ptrdiff_t GLsizeiptr;
+typedef ptrdiff_t GLintptr;
+
 // Объявление указателей на функции
 typedef void (APIENTRY* PFNGLGENBUFFERSPROC)(GLsizei n, GLuint* buffers);
 typedef void (APIENTRY* PFNGLBINDBUFFERPROC)(GLenum target, GLuint buffer);
 typedef void (APIENTRY* PFNGLBUFFERDATAPROC)(GLenum target, GLsizeiptr size, const GLvoid* data, GLenum usage);
 typedef void (APIENTRY* PFNGLDELETEBUFFERSPROC)(GLsizei n, const GLuint* buffers);
+// Добавьте объявление для glBufferSubData
+typedef void (APIENTRY* PFNGLBUFFERSUBDATAPROC)(GLenum target, GLintptr offset, GLsizeiptr size, const GLvoid* data);
 
 PFNGLGENBUFFERSPROC glGenBuffers = nullptr;
 PFNGLBINDBUFFERPROC glBindBuffer = nullptr;
 PFNGLBUFFERDATAPROC glBufferData = nullptr;
 PFNGLDELETEBUFFERSPROC glDeleteBuffers = nullptr;
+// Объявите указатель на функцию
+PFNGLBUFFERSUBDATAPROC glBufferSubData = nullptr;
 
 void LoadOpenGLFunctions() {
+    // Загружаем функции
     glGenBuffers = (PFNGLGENBUFFERSPROC)wglGetProcAddress("glGenBuffers");
     glBindBuffer = (PFNGLBINDBUFFERPROC)wglGetProcAddress("glBindBuffer");
     glBufferData = (PFNGLBUFFERDATAPROC)wglGetProcAddress("glBufferData");
     glDeleteBuffers = (PFNGLDELETEBUFFERSPROC)wglGetProcAddress("glDeleteBuffers");
+    glBufferSubData = (PFNGLBUFFERSUBDATAPROC)wglGetProcAddress("glBufferSubData");
 
-    if (!glGenBuffers || !glBindBuffer || !glBufferData || !glDeleteBuffers) {
-        MessageBox(NULL, L"Failed to load OpenGL functions.", L"Error", MB_OK | MB_ICONERROR);
-        exit(1);
+    // Проверяем, что все функции успешно загружены
+    if (!glGenBuffers || !glBindBuffer || !glBufferData || !glDeleteBuffers || !glBufferSubData) {
+        MessageBox(NULL, L"Неполучилось загрузить указатели на OpenGL функции.", L"Ошибка", MB_OK | MB_ICONERROR);
+        exit(1); // или другой способ обработки ошибки
     }
 }
-
 // Инициализация OpenGL
 void InitOpenGL(HWND hWnd)
 {
@@ -65,9 +81,23 @@ void InitOpenGL(HWND hWnd)
 
     hdc = GetDC(hWnd);
     int pixelFormat = ChoosePixelFormat(hdc, &pfd);
+    if (pixelFormat == 0) {
+        MessageBox(NULL, L"Не удалось установить pixel format.", L"Ошибка", MB_OK | MB_ICONERROR);
+        return;
+    }
     SetPixelFormat(hdc, pixelFormat, &pfd);
     hglrc = wglCreateContext(hdc);
-    wglMakeCurrent(hdc, hglrc);
+    if (!hglrc) {
+        MessageBox(NULL, L"Не удалось создать OpenGL rendering context.", L"Ошибка", MB_OK | MB_ICONERROR);
+        ReleaseDC(hWnd, hdc);
+        return;
+    }
+    if (!wglMakeCurrent(hdc, hglrc)) {
+        MessageBox(NULL, L"Failed to make the context current.", L"Ошибка", MB_OK | MB_ICONERROR);
+        wglDeleteContext(hglrc);
+        ReleaseDC(hWnd, hdc);
+        return; // или обработка ошибки
+    }
 
     // Загрузка функций OpenGL
     LoadOpenGLFunctions();
@@ -82,6 +112,7 @@ void InitOpenGL(HWND hWnd)
 // Очистка ресурсов OpenGL
 void CleanupOpenGL(HWND hWnd)
 {
+    glDeleteBuffers(1, &vbo); // Удаление VBO
     wglMakeCurrent(nullptr, nullptr);
     wglDeleteContext(hglrc);
     ReleaseDC(hWnd, hdc);
@@ -115,7 +146,7 @@ void DrawGrid() {
         }
     }
 
-    // Создание VBO
+     //Создание VBO
     glGenBuffers(1, &vbo);
     glBindBuffer(GL_ARRAY_BUFFER, vbo);
     glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), vertices.data(), GL_STATIC_DRAW);

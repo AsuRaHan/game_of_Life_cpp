@@ -68,7 +68,7 @@ void ClearGrid() {
 void ChangeGridSize(int newSize, HWND hWnd)
 {
     // Проверяем, что новый размер положительный
-    if (newSize > 0 and newSize < 10000)
+    if (newSize >= 10 and newSize <= 5000)
     {
         // Изменяем размер переменной GRID_SIZE
         GRID_SIZE = newSize;
@@ -76,5 +76,8 @@ void ChangeGridSize(int newSize, HWND hWnd)
         grid = std::vector<std::vector<int>>(GRID_SIZE, std::vector<int>(GRID_SIZE, false));
         // Перерисовываем окно, чтобы отразить изменения
         InvalidateRect(hWnd, nullptr, TRUE);
+    }
+    else {
+        MessageBox(NULL, L"Размер сетки либо слишком большой либо слишком маленький!", L"Ошибка", MB_OK | MB_ICONERROR);
     }
 }

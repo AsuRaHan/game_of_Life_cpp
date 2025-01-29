@@ -7,6 +7,7 @@
 #include <vector>
 #include <random>
 #include "framework.h"
+#include "Renderer.h"
 
 // √лобальные переменные
 extern int GRID_SIZE; // ќбъ€вление
